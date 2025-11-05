@@ -1,3 +1,3 @@
 # CPI-Analysis
 
-Live(https://piyushkalamkar.github.io/CPI-Analysis/)
+https://piyushkalamkar.github.io/CPI-Analysis/
