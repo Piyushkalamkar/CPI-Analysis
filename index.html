@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campaign Portal – Upload & Highlight</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- ---------- HEADER ---------- -->
+    <header>
+      <div class="container">
+        <h1>Campaign Portal – Upload & Highlight</h1>
+        <p class="sub">
+          Upload a Google Ads CSV/XLSX export. The portal will auto-generate
+          campaign blocks, show all available dates, and
+          <strong>digit-highlight</strong> the most recent column based on
+          performance trends.
+        </p>
+      </div>
+    </header>
+
+    <!-- ---------- MAIN CONTENT ---------- -->
+    <main class="container">
+      <div class="card">
+        <!-- ---------- UPLOADER ---------- -->
+        <div class="uploader">
+          <label for="fileInput" class="custom-file-upload">📁 Choose File</label>
+          <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" />
+          <div id="fileName" class="file-name">No file selected</div>
+        </div>
+
+        <!-- ---------- RULES TABLE ---------- -->
+        <div class="rules-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Condition</th>
+                <th>Color</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>CTR</strong></td>
+                <td>Higher ↑</td>
+                <td class="good-cell">Green</td>
+                <td>Users like our ads and are clicking more ✅</td>
+              </tr>
+              <tr>
+                <td><strong>Avg. CPC</strong></td>
+                <td>Higher ↑</td>
+                <td class="bad-cell">Red</td>
+                <td>Cost per click increased ⚠️</td>
+              </tr>
+              <tr>
+                <td><strong>Cost / Install</strong></td>
+                <td>Higher ↑</td>
+                <td class="bad-cell">Red</td>
+                <td>Cost per install increased ⚠️</td>
+              </tr>
+              <tr>
+                <td><strong>Installs</strong></td>
+                <td>Lower ↓</td>
+                <td class="bad-cell">Red</td>
+                <td>Fewer installs ⚠️</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ---------- CHART SECTION ---------- -->
+        <div class="chart-section">
+          <h2>📈 Campaign Performance Graph</h2>
+          <div class="chart-controls">
+            <label for="metricSelect">Select Metric:</label>
+            <select id="metricSelect">
+              <option value="CTR">CTR</option>
+              <option value="Avg. CPC">Avg. CPC</option>
+              <option value="Cost / Install">Cost / Install</option>
+              <option value="Installs">Installs</option>
+            </select>
+
+              <!-- ✅ New Campaign Dropdown -->
+  <label for="campaignSelect" style="margin-left: 16px;">Select Campaign:</label>
+  <select id="campaignSelect">
+    <option value="all">All Campaigns</option>
+  </select>
+</div>
+
+
+          </div>
+          <canvas id="campaignChart" height="120"></canvas>
+        </div>
+
+        <!-- ---------- TOOLBAR ---------- -->
+        <div class="toolbar">
+          <div class="pill" id="status">Please upload your file</div>
+        </div>
+
+        <!-- ---------- OUTPUT (TABLES) ---------- -->
+        <div id="output" class="output"></div>
+      </div>
+    </main>
+
+    <!-- ---------- SCRIPTS ---------- -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

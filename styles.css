@@ -1,0 +1,294 @@
+:root {
+  --good: #158000;  /* green text */
+  --bad: #fc0345;   /* red text */
+  --border: #e9eef3;
+  --muted: #666;
+  --primary: #2563eb;
+  --primary-hover: #1e40af;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Helvetica, Arial, sans-serif;
+  margin: 0;
+  background: #f6f9fc;
+  color: #0f172a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ---------- HEADER ---------- */
+header {
+  width: 100%;
+  padding: 24px;
+  background: linear-gradient(180deg, #ffffff 0, #f6f9fc 100%);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+p.sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ---------- LAYOUT ---------- */
+.container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 26px;
+  box-shadow: 0 2px 6px rgba(16, 24, 40, .08);
+  width: 95%;
+  max-width: 1600px;
+  text-align: center;
+  margin: 0 auto;
+}
+
+/* ---------- BEAUTIFUL UPLOADER ---------- */
+.uploader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+input[type="file"] {
+  display: none; /* hide default input */
+}
+
+.custom-file-upload {
+  background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s ease-in-out;
+}
+
+.custom-file-upload:hover {
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.35);
+}
+
+.file-name {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* ---------- RULES TABLE ---------- */
+.rules-table {
+  margin: 20px auto;
+  width: fit-content;
+  text-align: center;
+}
+
+.rules-table table {
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.rules-table th,
+.rules-table td {
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  font-size: 13.5px;
+  text-align: center;
+}
+
+.rules-table th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.rules-table tr:nth-child(even) td {
+  background: #fbfdff;
+}
+
+.good-cell {
+  color: var(--good);
+  font-weight: 700;
+}
+
+.bad-cell {
+  color: var(--bad);
+  font-weight: 700;
+}
+
+/* ---------- CHART SECTION ---------- */
+.chart-section {
+  margin: 40px auto 10px;
+  text-align: center;
+  width: 95%;
+  max-width: 1300px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+  position: relative;
+}
+
+.chart-section h2 {
+  font-size: 18px;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+.chart-controls {
+  margin-bottom: 10px;
+}
+
+.chart-controls label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: 8px;
+  color: #374151;
+}
+
+.chart-controls select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ✅ FIXED HEIGHT FOR CHART CANVAS */
+canvas {
+  width: 100% !important;
+  height: 800px !important;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+
+/* ---------- OUTPUT TABLE AREA ---------- */
+.output {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  max-height: 600px; /* ✅ limit to prevent large scroll */
+  overflow-y: auto;  /* ✅ scroll only inside this block */
+  padding-right: 10px;
+  box-sizing: border-box;
+}
+
+/* ---------- TABLE STYLING ---------- */
+.output table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  text-align: center;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+thead th {
+  background: #f8fafc;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 18px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13.5px;
+  text-align: center;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr.metric-row:nth-child(odd) {
+  background: #ffffff;
+}
+
+tbody tr.metric-row:nth-child(even) {
+  background: #fbfdff;
+}
+
+.metric-name {
+  white-space: nowrap;
+  width: 180px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.good {
+  color: var(--good);
+  font-weight: 700;
+}
+
+.bad {
+  color: var(--bad);
+  font-weight: 700;
+}
+
+.sep {
+  height: 14px;
+}
+
+/* ---------- TOOLBAR ---------- */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0 14px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.chart-controls select#campaignSelect {
+  min-width: 180px;
+}
