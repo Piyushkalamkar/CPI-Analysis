@@ -1,6 +1,6 @@
 :root {
-  --good: #158000;  /* green text */
-  --bad: #fc0345;   /* red text */
+  --good: #158000;
+  --bad: #fc0345;
   --border: #e9eef3;
   --muted: #666;
   --primary: #2563eb;
@@ -68,7 +68,7 @@ p.sub {
 }
 
 input[type="file"] {
-  display: none; /* hide default input */
+  display: none;
 }
 
 .custom-file-upload {
@@ -140,59 +140,6 @@ input[type="file"] {
   font-weight: 700;
 }
 
-/* ---------- CHART SECTION ---------- */
-.chart-section {
-  margin: 40px auto 10px;
-  text-align: center;
-  width: 95%;
-  max-width: 1300px;
-  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
-  padding: 25px;
-  position: relative;
-}
-
-.chart-section h2 {
-  font-size: 18px;
-  color: #1e293b;
-  margin-bottom: 12px;
-}
-
-.chart-controls {
-  margin-bottom: 10px;
-}
-
-.chart-controls label {
-  font-size: 14px;
-  font-weight: 500;
-  margin-right: 8px;
-  color: #374151;
-}
-
-.chart-controls select {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: #fff;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-/* ✅ FIXED HEIGHT FOR CHART CANVAS */
-canvas {
-  width: 100% !important;
-  height: 800px !important;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-  padding: 12px;
-  transition: all 0.3s ease;
-}
-
-
 /* ---------- OUTPUT TABLE AREA ---------- */
 .output {
   margin-top: 30px;
@@ -201,8 +148,8 @@ canvas {
   align-items: center;
   gap: 28px;
   width: 100%;
-  max-height: 600px; /* ✅ limit to prevent large scroll */
-  overflow-y: auto;  /* ✅ scroll only inside this block */
+  max-height: 600px;
+  overflow-y: auto;
   padding-right: 10px;
   box-sizing: border-box;
 }
@@ -289,6 +236,93 @@ tbody tr.metric-row:nth-child(even) {
   font-weight: 500;
 }
 
-.chart-controls select#campaignSelect {
-  min-width: 180px;
+/* ---------- GRAPH BUTTON ---------- */
+.graph-toolbar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 30px;
+}
+
+.show-graph-btn {
+  background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s ease-in-out;
+}
+
+.show-graph-btn:hover {
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+  transform: translateY(-1px);
+}
+
+/* ---------- GRAPH MODAL ---------- */
+.graph-modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(15, 23, 42, 0.75);
+}
+
+.graph-content {
+   background-color: #fff;
+  margin: 6% auto;
+  padding: 20px;
+  border-radius: 12px;
+  width: 860px;        /* fixed width */
+  height: 460px;       /* fixed height */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#chartCanvas {
+  width: 800px !important;   /* fixed canvas width */
+  height: 400px !important;  /* fixed canvas height */
+}
+
+.close-btn {
+ position: absolute;
+  top: 10px;
+  right: 16px;
+  color: #333;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: var(--bad);
+}
+
+.graph-select {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: border-color 0.2s ease-in-out;
+}
+
+.graph-select:hover,
+.graph-select:focus {
+  border-color: var(--primary);
 }
