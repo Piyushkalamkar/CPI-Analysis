@@ -1,4 +1,3 @@
-// ---------- DOM REFERENCES ----------
 const statusEl = document.getElementById('status');
 const out = document.getElementById('output');
 
@@ -27,26 +26,23 @@ function byDayAsc(a, b) {
 
 function normalizeColumns(row) {
   const out = {};
-  for (const k in row) {
-    out[(k || '').toString().trim()] = row[k];
-  }
+  for (const k in row) out[(k || '').toString().trim()] = row[k];
   return out;
 }
 
-// ---------- FILE INPUT ----------
+// ---------- FILE NAME DISPLAY ----------
 document.getElementById('fileInput').addEventListener('change', (e) => {
   const file = e.target.files?.[0];
   document.getElementById('fileName').textContent = file ? file.name : 'No file selected';
 });
 
-// ---------- CSV CLEANUP ----------
+// ---------- CSV/XLSX PARSE ----------
 function filterHeaderLines(csvText) {
   const lines = csvText.split(/\r?\n/);
   const idx = lines.findIndex((l) => /^\s*Campaign\s*,/i.test(l));
   return idx >= 0 ? lines.slice(idx).join('\n') : csvText;
 }
 
-// ---------- PARSER ----------
 async function parseFile(file) {
   const ext = file.name.split('.').pop().toLowerCase();
   statusEl.textContent = `Parsing ${file.name}…`;
@@ -72,7 +68,17 @@ async function parseFile(file) {
   }
 }
 
-// ---------- MAIN BUILD ----------
+// ---------- GLOBAL VARIABLES ----------
+let parsedData = [];
+const campaignSelect = document.getElementById('campaignSelect');
+const metricSelect = document.getElementById('metricSelect');
+const graphBtn = document.getElementById('showGraph');
+const graphModal = document.getElementById('graphModal');
+const closeGraph = document.getElementById('closeGraph');
+const chartCanvas = document.getElementById('chartCanvas');
+let chartInstance = null;
+
+// ---------- BUILD TABLE PORTAL ----------
 function buildPortal(rows) {
   const data = rows
     .map((r) => ({
@@ -92,11 +98,6 @@ function buildPortal(rows) {
 
   const daySet = new Set(data.map((d) => d.Day));
   const days = Array.from(daySet).sort(byDayAsc);
-  if (days.length < 2) {
-    statusEl.textContent = 'Need at least two days to compare.';
-    return;
-  }
-
   const prevDay = days[days.length - 2];
   const lastDay = days[days.length - 1];
 
@@ -120,13 +121,11 @@ function buildPortal(rows) {
     const th0 = document.createElement('th');
     th0.textContent = cleanName;
     trh.appendChild(th0);
-
     days.forEach((d) => {
       const th = document.createElement('th');
       th.textContent = d;
       trh.appendChild(th);
     });
-
     thead.appendChild(trh);
     table.appendChild(thead);
 
@@ -150,25 +149,15 @@ function buildPortal(rows) {
           else val = (rec[metric] || '').toString().replace(/\.00$/, '');
         }
 
-        // Highlight only last day's digit
         if (d === lastDay && days.length >= 2) {
           const prevRec = map.get(prevDay);
-          const p = prevRec
-            ? metric === 'Installs'
-              ? toFloat(cleanInstalls(prevRec[metric]))
-              : toFloat(prevRec[metric])
-            : 0;
-          const n = rec
-            ? metric === 'Installs'
-              ? toFloat(cleanInstalls(rec[metric]))
-              : toFloat(rec[metric])
-            : 0;
+          const p = prevRec ? toFloat(prevRec[metric]) : 0;
+          const n = rec ? toFloat(rec[metric]) : 0;
 
           let good = false;
           if (metric === 'CTR') good = n > p;
           else if (metric === 'Installs') good = n >= p;
-          else if (metric === 'Avg. CPC' || metric === 'Cost / Install')
-            good = n <= p;
+          else if (metric === 'Avg. CPC' || metric === 'Cost / Install') good = n <= p;
 
           const span = document.createElement('span');
           span.textContent = val;
@@ -186,54 +175,27 @@ function buildPortal(rows) {
 
     table.appendChild(tbody);
     out.appendChild(table);
-
-    const sep = document.createElement('div');
-    sep.className = 'sep';
-    out.appendChild(sep);
   });
 
   statusEl.textContent = `Rendered ${byCampaign.size} campaign(s), ${days.length} day(s). Comparing ${prevDay} → ${lastDay}.`;
 
-  // Initial chart render
-  renderChart(byCampaign, days, 'CTR');
-
-  // Populate campaign dropdown
-  const campaignSelect = document.getElementById('campaignSelect');
-  campaignSelect.innerHTML = '<option value="all">All Campaigns</option>';
-  [...byCampaign.keys()].forEach((c) => {
-    const option = document.createElement('option');
-    option.value = c;
-    option.textContent = cleanCampaign(c);
-    campaignSelect.appendChild(option);
-  });
-
-  // Metric dropdown
-  const metricSelect = document.getElementById('metricSelect');
-  metricSelect.onchange = (e) => {
-    const selectedMetric = e.target.value;
-    const selectedCampaign = campaignSelect.value;
-    renderChart(byCampaign, days, selectedMetric, selectedCampaign);
-  };
-
-  // Campaign dropdown
-  campaignSelect.onchange = (e) => {
-    const selectedCampaign = e.target.value;
-    const selectedMetric = metricSelect.value;
-    renderChart(byCampaign, days, selectedMetric, selectedCampaign);
-
-    // Hide/show tables
-    const tables = document.querySelectorAll('#output table');
-    tables.forEach((t) => {
-      const title = t.querySelector('th')?.textContent || '';
-      t.style.display =
-        selectedCampaign === 'all' || title.includes(cleanCampaign(selectedCampaign))
-          ? ''
-          : 'none';
-    });
-  };
+  // ✅ Populate campaign dropdown here
+  populateCampaignsFromMap(byCampaign);
 }
 
-// ---------- FILE UPLOAD EVENT ----------
+// ---------- POPULATE CAMPAIGN DROPDOWN ----------
+function populateCampaignsFromMap(byCampaign) {
+  const campaigns = [...byCampaign.keys()].filter(Boolean).sort();
+  campaignSelect.innerHTML = '<option value="">Select Campaign</option>';
+  campaigns.forEach((c) => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = cleanCampaign(c);
+    campaignSelect.appendChild(opt);
+  });
+}
+
+// ---------- FILE UPLOAD HANDLER ----------
 document.getElementById('fileInput').addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
   if (!file) {
@@ -243,223 +205,318 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
   }
 
   try {
-    const rows = await parseFile(file);
-    buildPortal(rows);
+    parsedData = await parseFile(file);
+    buildPortal(parsedData); // this now also populates dropdown
   } catch (err) {
     console.error(err);
     statusEl.textContent = 'Failed to parse file. Check format and try again.';
   }
 });
 
-// ---------- CHART.JS ----------
-let chartInstance = null;
+// ---------- GRAPH FEATURE ----------
+// ---------- GRAPH FEATURE (UPDATED) ----------
+graphBtn.addEventListener("click", () => {
+  if (!parsedData.length) {
+    alert("Please upload a file first.");
+    return;
+  }
 
-function renderChart(dataByCampaign, days, metric, selectedCampaign = 'all') {
-  const ctx = document.getElementById('campaignChart')?.getContext('2d');
-  if (!ctx) return;
+  const selectedCampaign = campaignSelect.value || "ALL";
+  const selectedMetric = metricSelect.value || "ALL";
 
-  const keys =
-    selectedCampaign === 'all' ? [...dataByCampaign.keys()] : [selectedCampaign];
+  renderSmartGraph(parsedData, selectedCampaign, selectedMetric);
+  graphModal.style.display = "block";
+});
 
-  const datasets = keys.map((campaign, i) => {
-    const rows = dataByCampaign.get(campaign);
-    const dayMap = new Map(rows.map((r) => [r.Day, r]));
+closeGraph.addEventListener("click", () => {
+  graphModal.style.display = "none";
+});
+
+window.addEventListener("click", (e) => {
+  if (e.target === graphModal) graphModal.style.display = "none";
+});
+
+function resetCanvas() {
+  const oldCanvas = document.getElementById("chartCanvas");
+  const parent = oldCanvas.parentNode;
+  const newCanvas = document.createElement("canvas");
+  newCanvas.id = "chartCanvas";
+  newCanvas.width = 800;
+  newCanvas.height = 400;
+  parent.replaceChild(newCanvas, oldCanvas);
+  return newCanvas.getContext("2d");
+}
+
+// ---------- SMART GRAPH RENDER ----------
+function renderSmartGraph(data, selectedCampaign, selectedMetric) {
+  if (chartInstance) {
+    chartInstance.destroy();
+    chartInstance = null;
+  }
+
+  const ctx = resetCanvas();
+  const daySet = new Set(data.map((d) => d.Day));
+  const days = Array.from(daySet).sort(byDayAsc);
+
+  const allMetrics = ["CTR", "Avg. CPC", "Cost / Install", "Installs"];
+  const colors = ["#2563eb", "#16a34a", "#f97316", "#dc2626"];
+
+  // helper for numeric parsing
+  const toNum = (v) => {
+    const s = (v || "").toString().replace(/[₹,%]/g, "").replace(/,/g, "").trim();
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+
+  // Filter by campaign
+  const filteredData =
+    selectedCampaign === "ALL"
+      ? data
+      : data.filter((r) => r.Campaign === selectedCampaign);
+
+  // Metrics to plot
+  const metricsToPlot =
+    selectedMetric === "ALL" ? allMetrics : [selectedMetric];
+
+  const datasets = metricsToPlot.map((metric, idx) => {
+    const color = colors[idx % colors.length];
     const values = days.map((d) => {
-      const rec = dayMap.get(d);
-      if (!rec) return null;
-      const val =
-        metric === 'Installs'
-          ? parseFloat(rec[metric].replace(/,/g, '')) || 0
-          : parseFloat(rec[metric].replace('%', '').trim()) || 0;
-      return val;
+      const records = filteredData.filter((r) => r.Day === d);
+      if (!records.length) return 0;
+      const avg =
+        records.reduce((sum, r) => sum + toNum(r[metric]), 0) /
+        (records.length || 1);
+      return avg;
     });
 
-    const colors = [
-      '#2563eb', '#16a34a', '#f59e0b', '#ef4444', '#8b5cf6',
-      '#0ea5e9', '#d946ef', '#10b981', '#f97316', '#64748b'
-    ];
-    const color = colors[i % colors.length];
-
     return {
-      label: cleanCampaign(campaign),
+      label: metric,
       data: values,
       borderColor: color,
-      backgroundColor: color + '33',
-      borderWidth: 3.5,
-      pointRadius: 6,
-      pointHoverRadius: 8,
-      pointHitRadius: 0,
-      pointBackgroundColor: color,
-      pointHoverBackgroundColor: '#fff',
-      pointBorderColor: color,
-      pointHoverBorderColor: color,
-      pointBorderWidth: 2,
+      backgroundColor: color + "33",
       tension: 0.35,
-      fill: false,
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 6,
     };
   });
 
-  if (chartInstance) chartInstance.destroy();
-
+  // Chart config
   chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: { labels: days, datasets },
+    type: "line",
+    data: {
+      labels: days,
+      datasets,
+    },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: {
-        padding: { top: 40, bottom: 20, left: 20, right: 20 },
-      },
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            color: '#111827',
-            font: { size: 14, weight: '600' },
-            boxWidth: 18,
-            padding: 12,
-          },
-        },
-        title: {
-          display: true,
-          text:
-            selectedCampaign === 'all'
-              ? `${metric} Trend Across All Campaigns`
-              : `${metric} Trend – ${cleanCampaign(selectedCampaign)}`,
-          color: '#0f172a',
-          font: { size: 20, weight: '700' },
-          padding: { bottom: 25 },
-        },
-        tooltip: {
-          enabled: false, // We'll handle tooltips manually
-          external: function (context) {
-            const tooltipEl =
-              document.getElementById('chartjs-tooltip') ||
-              createCustomTooltipElement();
-            const tooltipModel = context.tooltip;
-
-            if (tooltipModel.opacity === 0) {
-              tooltipEl.style.opacity = 0;
-              return;
-            }
-
-            const point = tooltipModel.dataPoints?.[0];
-            if (!point) return;
-
-            const val = point.parsed.y;
-            let formattedVal =
-              metric === 'CTR'
-                ? val.toFixed(2) + '%'
-                : metric === 'Installs'
-                ? val.toLocaleString()
-                : val.toFixed(2);
-
-            tooltipEl.innerHTML = `
-              <div style="font-weight:600;margin-bottom:2px;">📅 ${point.label}</div>
-              <div style="color:#2563eb;font-weight:600;">${point.dataset.label}</div>
-              <div style="font-size:14px;">${metric}: ${formattedVal}</div>
-            `;
-
-            tooltipEl.style.opacity = 1;
-            tooltipEl.style.left =
-              context.chart.canvas.offsetLeft +
-              tooltipModel.caretX +
-              10 +
-              'px';
-            tooltipEl.style.top =
-              context.chart.canvas.offsetTop +
-              tooltipModel.caretY -
-              20 +
-              'px';
-          },
-        },
-      },
-      interaction: {
-        mode: 'nearest',
-        intersect: true,
-      },
-   hover: {
-  mode: 'point',           // exact hover — only triggers when cursor touches a point
-  intersect: true,          // must physically intersect the drawn dot
-  onHover: (event, elements, chart) => {
-    const canvas = event.native.target;
-    canvas.style.cursor = 'default';
-
-    // increase detection sensitivity a bit
-    chart.options.elements.point.hitRadius = 8;  // expands invisible hit area
-    chart.options.elements.point.hoverRadius = 8;
-
-    // detect the point exactly under the cursor
-    const activePoints = chart.getElementsAtEventForMode(
-      event,
-      'point',
-      { intersect: true, axis: 'xy' },
-      true
-    );
-
-    if (activePoints.length) {
-      const point = activePoints[0];
-      canvas.style.cursor = 'pointer';
-
-      chart.setActiveElements([point]);
-      chart.tooltip.setActiveElements([point], {
-        x: point.element.x,
-        y: point.element.y,
-      });
-      chart.update();
-    } else {
-      // clear when cursor leaves the dot
-      chart.setActiveElements([]);
-      chart.tooltip.setActiveElements([], { x: 0, y: 0 });
-      chart.update();
-    }
-  },
-},
-
-
-
+      responsive: false,
+      maintainAspectRatio: true,
+      animation: { duration: 0 },
       scales: {
         y: {
-          beginAtZero: true,
-          grace: '10%',
-          grid: { color: '#e5e7eb', lineWidth: 1.2 },
-          ticks: { color: '#1e293b', font: { size: 14 }, padding: 8 },
+          beginAtZero: false,
           title: {
             display: true,
-            text: metric,
-            color: '#111827',
-            font: { size: 16, weight: 'bold' },
+            text:
+              selectedMetric === "ALL"
+                ? "All Metrics"
+                : selectedMetric,
+          },
+          grid: {
+            color: "rgba(0, 0, 0, 0.12)",
+          },
+          border: { color: "#94a3b8", width: 1 },
+          ticks: {
+            callback: (v) => {
+              if (
+                selectedMetric === "CTR" ||
+                (selectedMetric === "ALL" && allMetrics.includes("CTR"))
+              )
+                return v + "%";
+              if (
+                selectedMetric.includes("CPC") ||
+                selectedMetric.includes("Cost")
+              )
+                return "₹" + v;
+              if (selectedMetric.includes("Install") || selectedMetric === "ALL")
+                return v >= 1000 ? (v / 1000).toFixed(1) + "K" : v;
+              return v;
+            },
           },
         },
         x: {
-          grid: { color: '#f3f4f6' },
-          ticks: { color: '#1e293b', font: { size: 13.5 }, padding: 8 },
+          title: { display: true, text: "Day" },
+          grid: { color: "rgba(0, 0, 0, 0.08)" },
+          ticks: { maxRotation: 50, minRotation: 30 },
+          border: { color: "#94a3b8", width: 1 },
+        },
+      },
+      plugins: {
+        legend: { position: "bottom" },
+        title: {
+          display: true,
+          text:
+            selectedCampaign === "ALL"
+              ? "All Campaigns – Combined Trend"
+              : `${cleanCampaign(selectedCampaign)} – ${
+                  selectedMetric === "ALL"
+                    ? "All Metrics"
+                    : selectedMetric
+                } Trend`,
+          font: { size: 16 },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) =>
+              `${ctx.dataset.label}: ${ctx.formattedValue}`,
+          },
         },
       },
       elements: {
-        line: { borderJoinStyle: 'round' },
-        point: { hoverBorderWidth: 3 },
+        point: {
+          backgroundColor: "#2563eb",
+          borderColor: "#fff",
+          borderWidth: 1,
+        },
       },
     },
   });
 }
 
-// 🧩 Helper to create tooltip DOM element
-function createCustomTooltipElement() {
-  const tooltipEl = document.createElement('div');
-  tooltipEl.id = 'chartjs-tooltip';
-  tooltipEl.style.position = 'absolute';
-  tooltipEl.style.background = 'rgba(15,23,42,0.95)';
-  tooltipEl.style.color = '#fff';
-  tooltipEl.style.borderRadius = '8px';
-  tooltipEl.style.pointerEvents = 'none';
-  tooltipEl.style.padding = '10px 12px';
-  tooltipEl.style.transition = 'all 0.1s ease';
-  tooltipEl.style.fontSize = '13.5px';
-  tooltipEl.style.zIndex = '999';
-  document.body.appendChild(tooltipEl);
-  return tooltipEl;
+closeGraph.addEventListener('click', () => {
+  graphModal.style.display = 'none';
+});
+
+window.addEventListener('click', (e) => {
+  if (e.target === graphModal) graphModal.style.display = 'none';
+});
+
+function resetCanvas() {
+  const oldCanvas = document.getElementById('chartCanvas');
+  const parent = oldCanvas.parentNode;
+  const newCanvas = document.createElement('canvas');
+  newCanvas.id = 'chartCanvas';
+
+  // set fixed drawing buffer size (prevents any size jitter)
+  newCanvas.width = 800;
+  newCanvas.height = 400;
+
+  parent.replaceChild(newCanvas, oldCanvas);
+  return newCanvas.getContext('2d');
 }
+
+function renderGraph(data, campaign, metric) {
+  const filtered = data.filter((r) => r.Campaign === campaign);
+  if (!filtered.length) {
+    alert("No data found for this campaign.");
+    return;
+  }
+
+  const daySet = new Set(filtered.map((d) => d.Day));
+  const days = Array.from(daySet).sort(byDayAsc);
+
+  // 🔹 Force numeric cleaning for all metric types
+  const values = days.map((d) => {
+    const rec = filtered.find((r) => r.Day === d);
+    if (!rec) return 0;
+    let raw = (rec[metric] || "").toString().trim();
+
+    // Remove % and currency and commas
+    raw = raw.replace(/[₹,%]/g, "").replace(/,/g, "").trim();
+
+    const num = parseFloat(raw);
+    return Number.isFinite(num) ? num : 0;
+  });
+
+  // 🔹 Reset chart properly each time
+  if (chartInstance) {
+    chartInstance.destroy();
+    chartInstance = null;
+  }
+  const ctx = resetCanvas();
+
+  const maxVal = Math.max(...values);
+  const minVal = Math.min(...values);
+  const range = Math.abs(maxVal - minVal) || 1;
+
+  // Tight auto zoom for flat data (e.g., installs 5200–5300)
+  const pad = range * 0.2;
+  const suggestedMin = Math.max(0, minVal - pad);
+  const suggestedMax = maxVal + pad;
+
+  // 🔹 Axis formatting per metric
+  let formatValue = (v) => v;
+  if (metric.includes("CTR")) formatValue = (v) => v.toFixed(2) + "%";
+  else if (metric.includes("CPC") || metric.includes("Cost"))
+    formatValue = (v) => "₹" + v.toFixed(2);
+  else if (metric.includes("Install"))
+    formatValue = (v) => (v >= 1000 ? (v / 1000).toFixed(1) + "K" : v.toFixed(0));
+
+  // 🔹 Build chart fresh
+  chartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: days,
+      datasets: [
+        {
+          label: `${cleanCampaign(campaign)} – ${metric}`,
+          data: values,
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, 0.15)",
+          tension: 0.35,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: true,
+      animation: { duration: 0 },
+      scales: {
+        y: {
+          beginAtZero: false,
+          suggestedMin,
+          suggestedMax,
+          title: { display: true, text: metric },
+          ticks: { callback: formatValue },
+          grid: { color: "rgba(0, 0, 0, 0.12)" },
+          border: { color: "#94a3b8", width: 1 },
+        },
+        x: {
+          title: { display: true, text: "Day" },
+          ticks: { maxRotation: 45, minRotation: 30 },
+          grid: { color: "rgba(0, 0, 0, 0.08)" },
+          border: { color: "#94a3b8", width: 1 },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: `${cleanCampaign(campaign)} – ${metric} Trend`,
+          font: { size: 16 },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${metric}: ${formatValue(ctx.parsed.y)}`,
+          },
+        },
+      },
+      elements: {
+        point: {
+          backgroundColor: "#2563eb",
+          borderColor: "#fff",
+          borderWidth: 1,
+        },
+      },
+    },
+  });
+}
+
+
 
 
 
