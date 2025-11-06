@@ -261,7 +261,6 @@ function renderSmartGraph(data, selectedCampaign, selectedMetric) {
   const allMetrics = ["CTR", "Avg. CPC", "Cost / Install", "Installs"];
   const colors = ["#2563eb", "#16a34a", "#f97316", "#dc2626"];
 
-  // helper for numeric parsing
   const toNum = (v) => {
     const s = (v || "").toString().replace(/[₹,%]/g, "").replace(/,/g, "").trim();
     const n = parseFloat(s);
@@ -278,6 +277,7 @@ function renderSmartGraph(data, selectedCampaign, selectedMetric) {
   const metricsToPlot =
     selectedMetric === "ALL" ? allMetrics : [selectedMetric];
 
+  // Prepare dataset for each metric
   const datasets = metricsToPlot.map((metric, idx) => {
     const color = colors[idx % colors.length];
     const values = days.map((d) => {
@@ -298,58 +298,45 @@ function renderSmartGraph(data, selectedCampaign, selectedMetric) {
       borderWidth: 2,
       pointRadius: 3,
       pointHoverRadius: 6,
+      yAxisID: "y" + idx, // unique axis for each metric
     };
   });
 
-  // Chart config
+  // Create dynamic Y-axis per metric
+  const yAxes = metricsToPlot.map((metric, idx) => ({
+    id: "y" + idx,
+    position: idx % 2 === 0 ? "left" : "right", // alternate left/right
+    grid: { drawOnChartArea: idx === 0 },
+    ticks: {
+      callback: (v) => {
+        if (metric.includes("CTR")) return v.toFixed(1) + "%";
+        if (metric.includes("CPC") || metric.includes("Cost"))
+          return "₹" + v.toFixed(2);
+        if (metric.includes("Install"))
+          return v >= 1000 ? (v / 1000).toFixed(1) + "K" : v.toFixed(0);
+        return v;
+      },
+    },
+    title: { display: true, text: metric },
+  }));
+
+  // Build the chart
   chartInstance = new Chart(ctx, {
     type: "line",
-    data: {
-      labels: days,
-      datasets,
-    },
+    data: { labels: days, datasets },
     options: {
       responsive: false,
       maintainAspectRatio: true,
       animation: { duration: 0 },
+      interaction: { mode: "nearest", intersect: false },
       scales: {
-        y: {
-          beginAtZero: false,
-          title: {
-            display: true,
-            text:
-              selectedMetric === "ALL"
-                ? "All Metrics"
-                : selectedMetric,
-          },
-          grid: {
-            color: "rgba(0, 0, 0, 0.12)",
-          },
-          border: { color: "#94a3b8", width: 1 },
-          ticks: {
-            callback: (v) => {
-              if (
-                selectedMetric === "CTR" ||
-                (selectedMetric === "ALL" && allMetrics.includes("CTR"))
-              )
-                return v + "%";
-              if (
-                selectedMetric.includes("CPC") ||
-                selectedMetric.includes("Cost")
-              )
-                return "₹" + v;
-              if (selectedMetric.includes("Install") || selectedMetric === "ALL")
-                return v >= 1000 ? (v / 1000).toFixed(1) + "K" : v;
-              return v;
-            },
-          },
-        },
         x: {
           title: { display: true, text: "Day" },
           grid: { color: "rgba(0, 0, 0, 0.08)" },
           ticks: { maxRotation: 50, minRotation: 30 },
           border: { color: "#94a3b8", width: 1 },
         },
+        ...Object.fromEntries(yAxes.map((y) => [y.id, y])),
       },
       plugins: {
         legend: { position: "bottom" },
@@ -359,16 +346,17 @@ function renderSmartGraph(data, selectedCampaign, selectedMetric) {
             selectedCampaign === "ALL"
               ? "All Campaigns – Combined Trend"
               : `${cleanCampaign(selectedCampaign)} – ${
-                  selectedMetric === "ALL"
-                    ? "All Metrics"
-                    : selectedMetric
+                  selectedMetric === "ALL" ? "All Metrics" : selectedMetric
                 } Trend`,
           font: { size: 16 },
         },
         tooltip: {
           callbacks: {
-            label: (ctx) =>
-              `${ctx.dataset.label}: ${ctx.formattedValue}`,
+            label: (ctx) => {
+              const label = ctx.dataset.label;
+              const value = ctx.formattedValue;
+              return `${label}: ${value}`;
+            },
           },
         },
       },
@@ -383,6 +371,7 @@ function renderSmartGraph(data, selectedCampaign, selectedMetric) {
   });
 }
 
+
 closeGraph.addEventListener('click', () => {
   graphModal.style.display = 'none';
 });
@@ -392,18 +381,19 @@ window.addEventListener('click', (e) => {
 });
 
 function resetCanvas() {
-  const oldCanvas = document.getElementById('chartCanvas');
+  const oldCanvas = document.getElementById("chartCanvas");
   const parent = oldCanvas.parentNode;
-  const newCanvas = document.createElement('canvas');
-  newCanvas.id = 'chartCanvas';
+  const newCanvas = document.createElement("canvas");
+  newCanvas.id = "chartCanvas";
 
-  // set fixed drawing buffer size (prevents any size jitter)
-  newCanvas.width = 800;
-  newCanvas.height = 400;
+  // 🔹 Increased fixed drawing size (HD canvas)
+  newCanvas.width = 1200; // wider
+  newCanvas.height = 600; // taller
 
   parent.replaceChild(newCanvas, oldCanvas);
-  return newCanvas.getContext('2d');
+  return newCanvas.getContext("2d");
 }
+
 
 function renderGraph(data, campaign, metric) {
   const filtered = data.filter((r) => r.Campaign === campaign);
