@@ -70,44 +70,43 @@
           </table>
         </div>
 
-        <!-- ---------- CHART SECTION ---------- -->
-        <div class="chart-section">
-          <h2>📈 Campaign Performance Graph</h2>
-          <div class="chart-controls">
-            <label for="metricSelect">Select Metric:</label>
-            <select id="metricSelect">
-              <option value="CTR">CTR</option>
-              <option value="Avg. CPC">Avg. CPC</option>
-              <option value="Cost / Install">Cost / Install</option>
-              <option value="Installs">Installs</option>
-            </select>
-
-              <!-- ✅ New Campaign Dropdown -->
-  <label for="campaignSelect" style="margin-left: 16px;">Select Campaign:</label>
-  <select id="campaignSelect">
-    <option value="all">All Campaigns</option>
-  </select>
-</div>
-
-
-          </div>
-          <canvas id="campaignChart" height="120"></canvas>
-        </div>
-
         <!-- ---------- TOOLBAR ---------- -->
         <div class="toolbar">
           <div class="pill" id="status">Please upload your file</div>
         </div>
 
-        <!-- ---------- OUTPUT (TABLES) ---------- -->
+        <!-- ---------- GRAPH CONTROLS ---------- -->
+        <div class="graph-toolbar">
+          <select id="campaignSelect" class="graph-select">
+            <option value="">All Campaign</option>
+          </select>
+          <select id="metricSelect" class="graph-select">
+            <option value="">All Metric</option>
+            <option value="CTR">CTR</option>
+            <option value="Avg. CPC">Avg. CPC</option>
+            <option value="Cost / Install">Cost / Install</option>
+            <option value="Installs">Installs</option>
+          </select>
+          <button id="showGraph" class="show-graph-btn">📊 Show Graph</button>
+        </div>
+
+        <!-- ---------- OUTPUT TABLES ---------- -->
         <div id="output" class="output"></div>
       </div>
     </main>
 
+    <!-- ---------- GRAPH MODAL ---------- -->
+    <div id="graphModal" class="graph-modal">
+      <div class="graph-content">
+        <span id="closeGraph" class="close-btn">&times;</span>
+        <canvas id="chartCanvas"></canvas>
+      </div>
+    </div>
+
     <!-- ---------- SCRIPTS ---------- -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
