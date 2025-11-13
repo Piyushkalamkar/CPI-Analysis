@@ -25,49 +25,22 @@
       <div class="card">
         <!-- ---------- UPLOADER ---------- -->
         <div class="uploader">
-          <label for="fileInput" class="custom-file-upload">📁 Choose File</label>
+          <label for="fileInput" class="custom-file-upload"
+            >📁 Choose File</label
+          >
           <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" />
           <div id="fileName" class="file-name">No file selected</div>
         </div>
 
-        <!-- ---------- RULES TABLE ---------- -->
-        <div class="rules-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Metric</th>
-                <th>Condition</th>
-                <th>Color</th>
-                <th>Meaning</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>CTR</strong></td>
-                <td>Higher ↑</td>
-                <td class="good-cell">Green</td>
-                <td>Users like our ads and are clicking more ✅</td>
-              </tr>
-              <tr>
-                <td><strong>Avg. CPC</strong></td>
-                <td>Higher ↑</td>
-                <td class="bad-cell">Red</td>
-                <td>Cost per click increased ⚠️</td>
-              </tr>
-              <tr>
-                <td><strong>Cost / Install</strong></td>
-                <td>Higher ↑</td>
-                <td class="bad-cell">Red</td>
-                <td>Cost per install increased ⚠️</td>
-              </tr>
-              <tr>
-                <td><strong>Installs</strong></td>
-                <td>Lower ↓</td>
-                <td class="bad-cell">Red</td>
-                <td>Fewer installs ⚠️</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- ---------- ALERT TABLES (Grouped by Metric) ---------- -->
+        <div id="alertTables">
+          <div id="ctrAlerts" class="alert-table"></div>
+          <div id="avgCpcAlerts" class="alert-table"></div>
+          <div id="cpiAlerts" class="alert-table"></div>
+        </div>
+
+        <div class="trend-btn-container">
+          <button id="trendBtn" class="trend-btn">📈 Check Trends</button>
         </div>
 
         <!-- ---------- TOOLBAR ---------- -->
