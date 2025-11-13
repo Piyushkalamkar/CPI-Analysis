@@ -326,3 +326,83 @@ tbody tr.metric-row:nth-child(even) {
 .graph-select:focus {
   border-color: var(--primary);
 }
+
+.alert-table {
+   flex: 1 1 22%;         /* four tables share row */
+  min-width: 350px;      /* prevent squeezing too small */
+  max-width: 420px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.alert-table table {
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.alert-table th,
+.alert-table td {
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  font-size: 13.5px;
+  text-align: center;
+}
+
+.alert-table th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.alert-table tr:nth-child(even) td {
+  background: #fbfdff;
+}
+
+.alert-bad {
+  color: var(--bad);
+  font-weight: 700;
+}
+
+#alertTables {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;             /* space between tables */
+  flex-wrap: nowrap;     /* single horizontal row */
+  overflow-x: auto;      /* scrollable if too wide */
+  padding: 20px 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ---------- TREND BUTTON ---------- */
+.trend-btn-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.trend-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s ease-in-out;
+}
+
+.trend-btn:hover {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  transform: translateY(-1px);
+}
+
+
